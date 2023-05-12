@@ -86,8 +86,7 @@ class Obstacle():
         Right_cone = min(scan_filter[329:349])
         Backing_cone = min(scan_filter[170:190])
 
-        samples=[]
-        return samples.append(Front_cone, Left_cone, Right_cone, Backing_cone)
+        return Front_cone, Left_cone, Right_cone, Backing_cone
 
     def obstacle(self):
         twist = Twist()
@@ -95,17 +94,11 @@ class Obstacle():
 
         while not rospy.is_shutdown():
             Front_cone, Left_cone, Right_cone, Backing_cone = self.get_scan()
-            lidar_samples = self.get_scan()
 
-
-            Front_cone = lidar_samples<
-            Left_cone = self.get_scan(1)
-            Right_cone = self.get_scan(2)
-            Backing_cone = self.get_scan(3)
 
             # If turtlebot in movement.
             if turtlebot_moving:
-                if min_distance < TURNING_DISTANCE:
+                if Front_cone < TURNING_DISTANCE:
                     twist.linear.x = 0.5 * LINEAR_VEL
                     twist.angular.z = 1
                     self._cmd_pub.publish(twist)
@@ -116,7 +109,7 @@ class Obstacle():
                     twist.angular.z = 0.0
                     self._cmd_pub.publish(twist)
                     turtlebot_moving = True
-                    rospy.loginfo('Distance of the obstacle: %f', min_distance)
+                    rospy.loginfo('Distance of the obstacle: %f', Front_cone)
             
             # If turtlebot is not moving
             else:
