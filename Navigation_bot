@@ -87,7 +87,7 @@ class Obstacle():
                     turtlebot_moving = False
                     rospy.loginfo('Stop!')
             else:
-                twist.linear.x = 0.0
+                twist.linear.x = LINEAR_VEL
                 twist.angular.z = 0.0
                 self._cmd_pub.publish(twist)
                 turtlebot_moving = True
