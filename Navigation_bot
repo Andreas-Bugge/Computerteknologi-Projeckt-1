@@ -30,6 +30,9 @@ LIDAR_ERROR = 0.05
 SAFE_STOP_DISTANCE = STOP_DISTANCE + LIDAR_ERROR
 TURNING_DISTANCE = 0.5
 
+# Turning factor: Left = 1, Right = -1
+TURN_FACTOR = ([1, -1])
+
 
 # Class for obstacle dection.
 class Obstacle():
@@ -49,47 +52,64 @@ class Obstacle():
                                     # the default is 360.
         samples_view = 3            # 1 <= samples_view <= samples
         
+        
+        # Samples are evenly spread out, starting at the leftmost sample.
+        #if samples_view > samples:
+         #   samples_view = samples
 
-        if samples_view > samples:
-            samples_view = samples
+        # If sample is one we only need to check the front.
+        #        if samples_view is 1:
+         #   scan_filter.append(scan.ranges[0])
 
-        if samples_view is 1:
-            scan_filter.append(scan.ranges[0])
+        #else:
+         #   left_lidar_samples_ranges = -(samples_view//2 + samples_view % 2)
+          #  right_lidar_samples_ranges = samples_view//2
+           # 
+            #left_lidar_samples = scan.ranges[left_lidar_samples_ranges:]
+            #right_lidar_samples = scan.ranges[:right_lidar_samples_ranges]
+            #scan_filter.extend(left_lidar_samples + right_lidar_samples)
 
-        else:
-            left_lidar_samples_ranges = -(samples_view//2 + samples_view % 2)
-            right_lidar_samples_ranges = samples_view//2
-            
-            left_lidar_samples = scan.ranges[left_lidar_samples_ranges:]
-            right_lidar_samples = scan.ranges[:right_lidar_samples_ranges]
-            scan_filter.extend(left_lidar_samples + right_lidar_samples)
-
-        for i in range(samples_view):
+        scan_filter = scan.ranges[0:359]
+        # Sorts out all invalid, NaN and zeros from our scan_filter       
+        for i in range(scan_filter):
             if scan_filter[i] == float('Inf'):
                 scan_filter[i] = 3.5
             elif math.isnan(scan_filter[i]):
-                scan_filter[i] = 0
+                scan_filter[i] = 3.5
+            elif scan_filter[i] == 0:
+                scan_filter[i] = 3.5
         
-        return scan_filter
+        Left_front_cone = scan_filter[0:10]
+        Right_front_cone = scan_filter[350:359]
+        Front_cone = min(Left_front_cone.append(Right_front_cone))
+        Left_cone = min(scan_filter[11:31])
+        Right_cone = min(scan_filter[329:349])
+        Backing_cone = min(scan_filter[170:190])
+
+        samples=[]
+        return samples.append(Front_cone, Left_cone, Right_cone, Backing_cone)
 
     def obstacle(self):
         twist = Twist()
         turtlebot_moving = True
 
         while not rospy.is_shutdown():
-            lidar_distances = self.get_scan()
-            min_distance = min(lidar_distances)
+            Front_cone, Left_cone, Right_cone, Backing_cone = self.get_scan()
+            lidar_samples = self.get_scan()
+
+
+            Front_cone = lidar_samples<
+            Left_cone = self.get_scan(1)
+            Right_cone = self.get_scan(2)
+            Backing_cone = self.get_scan(3)
 
             # If turtlebot in movement.
             if turtlebot_moving:
-
-                
-                # Add turning when possible
                 if min_distance < TURNING_DISTANCE:
                     twist.linear.x = 0.5 * LINEAR_VEL
                     twist.angular.z = 1
                     self._cmd_pub.publish(twist)
-                    rospy.loginfo('Turning!')
+                    rospy.loginfo('Turning left!')
 
                 else:
                     twist.linear.x = LINEAR_VEL
