@@ -86,12 +86,26 @@ class Obstacle():
                     self._cmd_pub.publish(twist)
                     turtlebot_moving = False
                     rospy.loginfo('Stop!')
-            else:
-                twist.linear.x = LINEAR_VEL
-                twist.angular.z = 0.0
-                self._cmd_pub.publish(twist)
-                turtlebot_moving = True
-                rospy.loginfo('Distance of the obstacle : %f', min_distance)
+
+                # Add turning and backwards motion
+                    if min_distance < 0.5:
+                        twist.linear.x = LINEAR_VEL
+                        twist.angular.z = 0.4 * LINEAR_VEL
+                        self._cmd_pub.publish(twist)
+                        rospy.loginfo('Turning!')
+
+                    else:
+                        twist.linear.x = - LINEAR_VEL
+                        twist.angular.z = 0.0
+                        self._cmd_pub.publish(twist)
+                        rospy.loginfo('Moving backwards!')
+
+                else:
+                    twist.linear.x = LINEAR_VEL
+                    twist.angular.z = 0.0
+                    self._cmd_pub.publish(twist)
+                    turtlebot_moving = True
+                    rospy.loginfo('Distance of the obstacle : %f', min_distance)
 
 def main():
     rospy.init_node('turtlebot3_obstacle')
