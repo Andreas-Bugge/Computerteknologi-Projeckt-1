@@ -88,9 +88,9 @@ class Obstacle():
                     rospy.loginfo('Stop!')
 
                 # Add turning and backwards motion
-                    if min_distance < 0.5:
+                    if min_distance < 1:
                         twist.linear.x = LINEAR_VEL
-                        twist.angular.z = 0.4 * LINEAR_VEL
+                        twist.angular.z = LINEAR_VEL
                         self._cmd_pub.publish(twist)
                         rospy.loginfo('Turning!')
 
