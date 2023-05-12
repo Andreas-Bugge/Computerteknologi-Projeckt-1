@@ -69,9 +69,9 @@ class Obstacle():
             right_lidar_samples = scan.ranges[:right_lidar_samples_ranges]
             scan_filter.extend(left_lidar_samples + right_lidar_samples)
 
-        scan_filter = scan.ranges[0:359]
+        scan_filter = list(scan.ranges[0:359])
         # Sorts out all invalid, NaN and zeros from our scan_filter       
-        for i in range(scan_filter):
+        for i in range(len(scan_filter)):
             if scan_filter[i] == float('Inf'):
                 scan_filter[i] = 3.5
             elif math.isnan(scan_filter[i]):
@@ -81,7 +81,8 @@ class Obstacle():
         
         Left_front_cone = scan_filter[0:10]
         Right_front_cone = scan_filter[350:359]
-        Front_cone = min(Left_front_cone.append(Right_front_cone))
+        Front_cone = Left_front_cone.append(Right_front_cone)
+        Front_cone = min(Front_cone)
         Left_cone = min(scan_filter[11:31])
         Right_cone = min(scan_filter[329:349])
         Backing_cone = min(scan_filter[170:190])
