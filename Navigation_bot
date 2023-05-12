@@ -70,6 +70,46 @@ class Obstacle():
     def obstacle(self):
         twist = Twist()
         turtlebot_moving = True
+        
+        # Turtlebot is moving forward
+        def Forward (self,vel):
+            twist = Twist()
+            twist.linear.x = vel
+            twist.angular.z = 0.0
+            self._cmd_pub.publish(twist)
+            rospy.loginfo('Moving forward!')
+
+        # Turning turtlebot to the right
+        def Turn_right (self,vel):
+            twist = Twist()   
+            twist.linear.x = LINEAR_VEL
+            twist.angular.z = -vel
+            self._cmd_pub.publish(twist)
+            rospy.loginfo('Turning to right!')
+
+        # Turning turtlebot to the left
+        def Turn_left (self,vel):
+            twist = Twist()   
+            twist.linear.x = LINEAR_VEL
+            twist.angular.z = vel
+            self._cmd_pub.publish(twist)
+            rospy.loginfo('Turning to left!')
+
+        # Turtlebot is backing up
+        def Backing (self,speed):
+            twist = Twist()   
+            twist.linear.x = -speed
+            twist.angular.z = 0.0
+            self._cmd_pub.publish(twist)
+            rospy.loginfo('Backing!')
+
+        # Turning around in case of encirclement
+        def turning_around (self, vel):
+            twist = Twist()
+            twist.linear.x = 0.0
+            twist.angular.z = math.pi
+            self._cmd_pub.publish(twist)
+            rospy.loginfo('Turning around!')
 
         while not rospy.is_shutdown():
             Front_cone, Left_cone, Right_cone, Backing_cone = self.get_scan()
