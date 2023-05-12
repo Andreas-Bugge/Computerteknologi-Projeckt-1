@@ -47,28 +47,6 @@ class Obstacle():
         scan = rospy.wait_for_message('scan', LaserScan)
         scan_filter = []
        
-        samples = len(scan.ranges)  # The number of samples is defined in 
-                                    # turtlebot3_<model>.gazebo.xacro file,
-                                    # the default is 360.
-        samples_view = 3            # 1 <= samples_view <= samples
-        
-        
-        #Samples are evenly spread out, starting at the leftmost sample.
-        if samples_view > samples:
-            samples_view = samples
-
-        #If sample is one we only need to check the front.
-        if samples_view is 1:
-            scan_filter.append(scan.ranges[0])
-
-        else:
-            left_lidar_samples_ranges = -(samples_view//2 + samples_view % 2)
-            right_lidar_samples_ranges = samples_view//2
-            
-            left_lidar_samples = scan.ranges[left_lidar_samples_ranges:]
-            right_lidar_samples = scan.ranges[:right_lidar_samples_ranges]
-            scan_filter.extend(left_lidar_samples + right_lidar_samples)
-
         scan_filter = list(scan.ranges[0:359])
         # Sorts out all invalid, NaN and zeros from our scan_filter       
         for i in range(len(scan_filter)):
@@ -101,9 +79,15 @@ class Obstacle():
             if turtlebot_moving:
                 if Front_cone < TURNING_DISTANCE:
                     twist.linear.x = 0.5 * LINEAR_VEL
-                    twist.angular.z = 1
+                    twist.angular.z = TURN_FACTOR[0]
                     self._cmd_pub.publish(twist)
                     rospy.loginfo('Turning left!')
+                
+                elif Front_cone < SAFE_STOP_DISTANCE:
+                    twist.linear.x = -0.5 * LINEAR_VEL
+                    twist.angular.z = 0.0
+                    self._cmd_pub.publish(twist)
+                    rospy.loginfo('Backing up!')
 
                 else:
                     twist.linear.x = LINEAR_VEL
