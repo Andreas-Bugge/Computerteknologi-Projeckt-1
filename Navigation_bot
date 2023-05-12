@@ -46,7 +46,6 @@ class Obstacle():
     def get_scan(self):
         scan = rospy.wait_for_message('scan', LaserScan)
         scan_filter = []
-       
         scan_filter = list(scan.ranges[0:359])
         # Sorts out all invalid, NaN and zeros from our scan_filter       
         for i in range(len(scan_filter)):
@@ -57,6 +56,7 @@ class Obstacle():
             elif scan_filter[i] == 0:
                 scan_filter[i] = 3.5
         
+        # Makes the front cones that the turtlebot uses detection indicators
         Left_front_cone = scan_filter[0:10]
         Right_front_cone = scan_filter[350:359]
         Front_cone = Left_front_cone + Right_front_cone
