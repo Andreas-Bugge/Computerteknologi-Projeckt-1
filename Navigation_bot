@@ -30,8 +30,7 @@ LIDAR_ERROR = 0.05
 SAFE_STOP_DISTANCE = STOP_DISTANCE + LIDAR_ERROR
 TURNING_DISTANCE = 0.5
 
-# Turning factor: Left = 1, Right = -1
-# Maybe delete
+# Turning factor: Left = 1, Right = -1. Just in case we need values. 
 TURN_FACTOR = ([1, -1])
 
 
@@ -54,8 +53,9 @@ class Obstacle():
                 scan_filter[i] = 3.5
             elif math.isnan(scan_filter[i]):
                 scan_filter[i] = 3.5
+            # If the scan_filter is zero, we have a collision
             elif scan_filter[i] == 0:
-                scan_filter[i] = 3.5
+                scan_filter[i] = 0.01
         
         # Makes the front cones that the turtlebot uses detection indicators
         Left_front_cone = scan_filter[0:10]
@@ -68,20 +68,21 @@ class Obstacle():
         Left_cone = min(scan_filter[32:60])
         Right_cone= min(scan_filter[300:328])
 
-
         return Front_cone, Front_Left_cone, Front_Right_cone, Backing_cone, Left_cone, Right_cone
 
     def obstacle(self):
         twist = Twist()
         turtlebot_moving = True
         
+        # Standard functions for turtlebot movement:
+
         # Turtlebot is moving forward
         def Forward (speed):
             twist = Twist()
             twist.linear.x = speed
             twist.angular.z = 0.0
             self._cmd_pub.publish(twist)
-            rospy.loginfo('Moving forward!')
+            rospy.loginfo('Moving forward! %f', Front_cone)
 
         # Turning turtlebot to the right
         def Turn_right (speed,turn):
@@ -105,10 +106,10 @@ class Obstacle():
             twist.linear.x = -speed
             twist.angular.z = 0.0
             self._cmd_pub.publish(twist)
-            rospy.loginfo('Backing!')
+            rospy.loginfo('Backing! %f', Backing_cone)
 
         # Turning around in case of encirclement
-        def turning_around (turn):
+        def Turning_around (turn):
             twist = Twist()
             twist.linear.x = 0.0
             twist.angular.z = turn
@@ -116,6 +117,7 @@ class Obstacle():
             rospy.loginfo('Turning around!') 
 
         # All the logic for obstacle avoidance
+    
         while not rospy.is_shutdown():
             Front_cone, Front_Left_cone, Front_Right_cone, Backing_cone, Left_cone, Right_cone = self.get_scan()
 
@@ -130,22 +132,21 @@ class Obstacle():
                 elif Front_cone < TURNING_DISTANCE:
                     # If there is more space to the right than to the left, turtlebot will turn right.
                     if Front_Left_cone < Front_Right_cone:
-                        Turn_right(0.6 * LINEAR_VEL, 0.15)
+                        Turn_right(0.6 * LINEAR_VEL, 1)
                         # If there more space to the left than to the right, turtlebot will turn left.
                     else:
-                        Turn_left(0.6 * LINEAR_VEL, 0.15)  
+                        Turn_left(0.6 * LINEAR_VEL, 1)  
 
                 else:
                     # If there is a clear way ahead, turtlebot will move forward.
-                    twist.linear.x = LINEAR_VEL
-                    twist.angular.z = 0.0
-                    self._cmd_pub.publish(twist)
-                    turtlebot_moving = True
-                    rospy.loginfo('Distance of the obstacle: %f', Front_cone)
+                    Forward(LINEAR_VEL)
+                    rospy.loginfo('Moving forward. Distance of the obstacle: %f', Front_cone)
             
             # If turtlebot is not moving
             else:
-                Backing(LINEAR_VEL)
+                # If there is a collision, we need to back up.
+                Turning_around(1)
+
 
 def main():
     rospy.init_node('turtlebot3_obstacle')
