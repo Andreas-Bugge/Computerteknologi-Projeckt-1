@@ -29,6 +29,7 @@ STOP_DISTANCE = 0.1
 LIDAR_ERROR = 0.05
 SAFE_STOP_DISTANCE = STOP_DISTANCE + LIDAR_ERROR
 TURNING_DISTANCE = 0.5
+SHARP_TURN = 0.25
 
 # Turning factor: Left = 1, Right = -1. Just in case we need values. 
 TURN_FACTOR = ([1, -1])
@@ -90,7 +91,7 @@ class Obstacle():
             twist.linear.x = speed
             twist.angular.z = -turn
             self._cmd_pub.publish(twist)
-            rospy.loginfo('Turning to right!')
+            rospy.loginfo('Turning to right! %f', Front_Right_cone)
 
         # Turning turtlebot to the left
         def Turn_left (speed, turn):
@@ -98,7 +99,7 @@ class Obstacle():
             twist.linear.x = speed
             twist.angular.z = turn
             self._cmd_pub.publish(twist)
-            rospy.loginfo('Turning to left!')
+            rospy.loginfo('Turning to left! %f', Front_Left_cone)
 
         # Turtlebot is backing up
         def Backing (speed):
@@ -120,7 +121,6 @@ class Obstacle():
     
         while not rospy.is_shutdown():
             Front_cone, Front_Left_cone, Front_Right_cone, Backing_cone, Left_cone, Right_cone = self.get_scan()
-
             # If turtlebot in movement.
             if turtlebot_moving:
                 # If there is a collision.
@@ -135,17 +135,17 @@ class Obstacle():
                         Turn_right(0.6 * LINEAR_VEL, 1)
                         # If there more space to the left than to the right, turtlebot will turn left.
                     else:
-                        Turn_left(0.6 * LINEAR_VEL, 1)  
-
+                        Turn_left(0.6 * LINEAR_VEL, 1)
                 else:
                     # If there is a clear way ahead, turtlebot will move forward.
                     Forward(LINEAR_VEL)
-                    rospy.loginfo('Moving forward. Distance of the obstacle: %f', Front_cone)
             
             # If turtlebot is not moving
             else:
                 # If there is a collision, we need to back up.
                 Turning_around(1)
+                
+                #if Backing_cone < STOP_DISTANCE: # check sourroundings
 
 
 def main():
