@@ -124,16 +124,16 @@ class Obstacle():
                 # If there is a collision.
                 if Front_cone < STOP_DISTANCE:
                     turtlebot_moving = False
-                   
-                
+                    rospy.loginfo('Collision! STOP MOVING!')
+
                 # If it is possible to make a soft turn
                 elif Front_cone < TURNING_DISTANCE:
                     # If there is more space to the right than to the left, turtlebot will turn right.
                     if Front_Left_cone < Front_Right_cone:
-                        Turn_right(0.5)
+                        Turn_right(0.6 * LINEAR_VEL, 0.15)
                         # If there more space to the left than to the right, turtlebot will turn left.
                     else:
-                        Turn_left(0.5)  
+                        Turn_left(0.6 * LINEAR_VEL, 0.15)  
 
                 else:
                     # If there is a clear way ahead, turtlebot will move forward.
@@ -145,11 +145,7 @@ class Obstacle():
             
             # If turtlebot is not moving
             else:
-                twist.linear.x = 0.
-                twist.angular.z = 0.0
-                self._cmd_pub.publish(twist)
-                turtlebot_moving = False
-                rospy.loginfo('Stop!')
+                Backing(LINEAR_VEL)
 
 def main():
     rospy.init_node('turtlebot3_obstacle')
