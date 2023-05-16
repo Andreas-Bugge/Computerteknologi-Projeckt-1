@@ -110,7 +110,7 @@ class Obstacle():
             rospy.loginfo('Turning to left! %f', Front_Left_cone)
 
         # Turtlebot is backing up
-        def Backing (speed, time):
+        def Backing (speed):
             twist = Twist()   
             twist.linear.x = speed
             twist.angular.z = 0.0
@@ -167,19 +167,19 @@ class Obstacle():
             # If turtlebot is NOT moving
             else:
                 # If there is a collision, we need to back up untill it is possible to make a sharp turn.
-                while Front_cone <= 0.2:
-                    Backing(-0.4 * LINEAR_VEL, 0.5)
+                if Front_cone <= 0.2:
+                    Backing(-0.4 * LINEAR_VEL)
                     rospy.loginfo('Distance in front %f', Front_cone)
 
-                    if Front_cone > 0.19:
-                        rosby.loginfo('Backing done!')
-                        turtlebot_moving = True
+                else:
+                    rospy.loginfo('Backing done. Moving forward.')
+                    turtlebot_moving = True
 
             # Updates the stats
-            Accumulated_speed += abs(twist.linear.x)
-            Speed_updates += 1
+            #Accumulated_speed += abs(twist.linear.x)
+            #Speed_updates += 1
         
-        rospy.on_shutdown(self.Stats)
+            #rospy.on_shutdown(self.Stats)
 
 
             
