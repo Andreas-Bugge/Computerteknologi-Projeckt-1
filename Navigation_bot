@@ -195,17 +195,18 @@ class Obstacle():
                    
             # If turtlebot is NOT moving
             else:
-                # If there is a collision, we need to back up untill it is possible to make a sharp turn.
-                if Front_cone < SAFE_STOP_DISTANCE * 1.5:
+                # If there is a wall to close to the turtlebot, it will back up
+                if Front_cone < SAFE_STOP_DISTANCE and (Front_Left_cone < SAFE_STOP_DISTANCE or Front_Right_cone < SAFE_STOP_DISTANCE):
+                    Backing(-1 * LINEAR_VEL)
                     rospy.loginfo('---7---')
-                    # Hvis turn_time is bigger than 0  
+
+                # If there less then 35 cm, we turn around 
+                if Front_cone < SAFE_STOP_DISTANCE * 1.4:
+                    rospy.loginfo('---8---')
+                    # If turn_time counter is above 0, turtlebot will turn around in a circle
                     if Turn_time > 0:  
-                        if Front_Left_cone < Front_Right_cone:
-                            Turning_around_right(1)
-                            rospy.loginfo('---8---')
-                        elif Front_Left_cone > Front_Right_cone:
-                            Turning_around_left(1)
-                            rospy.loginfo('---9---')           
+                        Turning_around_right(1)
+                        rospy.loginfo('---9---')         
                     else:
                         Backing(0.3 * LINEAR_VEL)
                         turtlebot_moving = True
@@ -214,19 +215,18 @@ class Obstacle():
                     # Counter for the turn time
                     Turn_time -= 1   
 
-                    rospy.loginfo('%f', Turn_time)
+                    rospy.loginfo('Turn-time counter: %f', Turn_time)
                     
                 # If there is no collision, turtlebot will move forward.
                 else:
                     Forward(LINEAR_VEL)
-                    rospy.loginfo('---11---')
+                    rospy.loginfo('---12---')
                     Turn_time = 14
                     turtlebot_moving = True
-
-
-            # Updates the stats
-            #Accumulated_speed += abs(twist.linear.x)
-            #Speed_updates += 1
+            
+            #Updates the stats
+            Accumulated_speed += abs(twist.linear.x)
+            Speed_updates += 1
         
             #rospy.on_shutdown(self.Stats)
 
