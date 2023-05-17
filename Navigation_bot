@@ -28,10 +28,10 @@ import time
 
 # Global Variables
 LINEAR_VEL = 0.22
-STOP_DISTANCE = 0.1
+STOP_DISTANCE = 0.2
 LIDAR_ERROR = 0.05
 SAFE_STOP_DISTANCE = STOP_DISTANCE + LIDAR_ERROR
-TURNING_DISTANCE = 0.3 
+TURNING_DISTANCE = 0.4
 
 
 
@@ -51,51 +51,56 @@ class Obstacle():
         # Sorts out all invalid, NaN and zeros from our scan_filter       
         for i in range(len(scan_filter)):
             if scan_filter[i] == float('Inf'):
-                scan_filter[i] = 3.5
-            elif math.isnan(scan_filter[i]):
-                scan_filter[i] = 3.5
-            # If the scan_filter is zero, we have a collision
+                scan_filter[i] = 20.0
+            if math.isnan(scan_filter[i]):
+                scan_filter[i] = 20.0
             elif scan_filter[i] == 0:
-                scan_filter[i] = 3.5
+                scan_filter[i] = 20.0
         
         # Makes the front cones that the turtlebot uses detection indicators
         Left_front_cone = scan_filter[0:15]
         Right_front_cone = scan_filter[345:359]
         Front_cone = Left_front_cone + Right_front_cone
         Front_cone = min(Front_cone)
+
         Front_Left_cone = min(scan_filter[16:36])
         Front_Right_cone = min(scan_filter[324:344])
         Backing_cone = min(scan_filter[170:190])
+
+        # TEMP: Not used ATM
         Left_cone = min(scan_filter[37:70])
         Right_cone= min(scan_filter[290:323])
 
         return Front_cone, Front_Left_cone, Front_Right_cone, Backing_cone, Left_cone, Right_cone
 
     def obstacle(self):
-        twist = Twist()
-        turtlebot_moving = True
 
         # Initial stats for the program
+        twist = Twist()
+        turtlebot_moving = True
         Victims_found = 0
         Collision_counter = 0
+
+        # Speed stats
         Accumulated_speed = 0
         Speed_updates = 0
 
-        # Runtime
+        # Runtime settings
         Run_time = 60 * 2
         End_run = time.time() + Run_time
+
+        # Rotation settings
+        Turn_time = 14
     
         # Turtlebot is moving forward
         def Forward (speed):
-           # twist = Twist()
             twist.linear.x = speed
             twist.angular.z = 0.0
             self._cmd_pub.publish(twist)
             rospy.loginfo('Moving forward! %f', Front_cone)
 
         # Turning turtlebot to the right
-        def Turn_right (speed,turn):
-            #twist = Twist()   
+        def Turn_right (speed,turn):   
             twist.linear.x = speed
             twist.angular.z = -turn
             self._cmd_pub.publish(twist)
@@ -103,23 +108,27 @@ class Obstacle():
 
         # Turning turtlebot to the left
         def Turn_left (speed, turn):
-            #twist = Twist()   
             twist.linear.x = speed
             twist.angular.z = turn
             self._cmd_pub.publish(twist)
             rospy.loginfo('Turning to left! %f', Front_Left_cone)
 
         # Turtlebot is backing up
-        def Backing (speed):
-            #twist = Twist()   
+        def Backing (speed):   
             twist.linear.x = speed
             twist.angular.z = 0.0
             self._cmd_pub.publish(twist)
             rospy.loginfo('Backing! %f', Backing_cone)
 
         # Turning around in case of encirclement
-        def Turning_around (turn):
-            #twist = Twist()
+        def Turning_around_right (turn):
+            twist.linear.x = 0.0
+            twist.angular.z = turn
+            self._cmd_pub.publish(twist)
+            rospy.loginfo('Turning around!') 
+        
+        # Turning around in case of encirclement
+        def Turning_around_left (turn):
             twist.linear.x = 0.0
             twist.angular.z = turn
             self._cmd_pub.publish(twist)
@@ -132,53 +141,88 @@ class Obstacle():
             rospy.loginfo('Accumulated speed: %f', Accumulated_speed)
             rospy.loginfo('Speed updates: %f', Speed_updates)
 
-        #twist.linear.x = LINEAR_VEL
-
-        # All the logic for obstacle avoidance
+        # Control loop for the program
         while not rospy.is_shutdown() and time.time() < End_run:
             Front_cone, Front_Left_cone, Front_Right_cone, Backing_cone, Left_cone, Right_cone = self.get_scan()
             
-            # If turtlebot is in motion.
+            # If turtlebot is moving forward og turning
             if turtlebot_moving:
+                # Resetting the turn time
+                Turn_time = 14
 
-                # If there is a collision the turtlebot moving is set to false.
-                if Front_cone <= SAFE_STOP_DISTANCE:
-                    turtlebot_moving = False
+                # If there is a wall to close to the turtlebot, it will back up
+                if Front_cone < SAFE_STOP_DISTANCE:
+                    # Backing up turtlebot for one second
+                    Backing(-0.3 * LINEAR_VEL)
+                    # Stop the turtlebot
+                    turtlebot_moving = False  
+                    rospy.loginfo('---1---') 
 
                 # If it is possible to make a SOFT TURN
-                elif Front_cone <= TURNING_DISTANCE * 1.3:
+                if Front_cone < TURNING_DISTANCE:
                     # If there is more space to the right than to the left, turtlebot will turn right.
-
                     if Front_Left_cone < Front_Right_cone:
-                        Turn_right(0.4 * LINEAR_VEL, 0.95)
+                        Turn_right(0.4 * LINEAR_VEL, 1)
+                        rospy.loginfo('---2---') 
+                        # If there is need for at sharp turn to the right
+                        if Front_cone < TURNING_DISTANCE / 1.3:
+                            Turn_right(0.2 * LINEAR_VEL, 1)
+                            rospy.loginfo('---3---')
+
+
                         # If there more space to the left than to the right, turtlebot will turn left.
-                    
                     elif Front_Left_cone > Front_Right_cone:
-                        Turn_left(0.4 * LINEAR_VEL, 0.95)
-
-                # If it is possible to make a HARD TURN
-                elif Front_cone <= TURNING_DISTANCE:
-                    # If there is more space to the right than to the left, turtlebot will turn right.
-                    if Front_Left_cone < Front_Right_cone:
-                        Turn_right(0.1 * LINEAR_VEL, 1.9)
-                        # If there more space to the left than to the right, turtlebot will turn left.
-                    elif Front_Left_cone >= Front_Right_cone:
-                        Turn_left(0.1 * LINEAR_VEL, 1.9)
+                        Turn_left(0.4 * LINEAR_VEL, 1)
+                        rospy.loginfo('---4---')
+                        # If there is need for at sharp turn to the left
+                        if Front_cone < TURNING_DISTANCE / 1.3:
+                            Turn_left(0.2 * LINEAR_VEL, 1)
+                        
                 # If there is a clear way ahead, turtlebot will move forward.
                 else:
                     Forward(LINEAR_VEL)
-                   
+                    rospy.loginfo('---5---')
 
+                    # If there is consistent faulty scans, turtlebot will back up.
+                    if Front_cone > 10.0:
+                        Turn_time = 2
+                        if (Turn_time > 0):
+                            Backing(0.3 * LINEAR_VEL)
+                            Turn_time -= 1
+                            rospy.loginfo('---6---')
+                        else:
+                            turtlebot_moving = False
+                   
             # If turtlebot is NOT moving
             else:
                 # If there is a collision, we need to back up untill it is possible to make a sharp turn.
-                if Front_cone <= 0.2:
-                    Backing(-0.4 * LINEAR_VEL)
-                    rospy.loginfo('Distance in front %f', Front_cone)
+                if Front_cone < SAFE_STOP_DISTANCE * 1.5:
+                    rospy.loginfo('---7---')
+                    # Hvis turn_time is bigger than 0  
+                    if Turn_time > 0:  
+                        if Front_Left_cone < Front_Right_cone:
+                            Turning_around_right(1)
+                            rospy.loginfo('---8---')
+                        elif Front_Left_cone > Front_Right_cone:
+                            Turning_around_left(1)
+                            rospy.loginfo('---9---')           
+                    else:
+                        Backing(0.3 * LINEAR_VEL)
+                        turtlebot_moving = True
+                        rospy.loginfo('---10---')
 
+                    # Counter for the turn time
+                    Turn_time -= 1   
+
+                    rospy.loginfo('%f', Turn_time)
+                    
+                # If there is no collision, turtlebot will move forward.
                 else:
-                    rospy.loginfo('Backing done. Moving forward.')
+                    Forward(LINEAR_VEL)
+                    rospy.loginfo('---11---')
+                    Turn_time = 14
                     turtlebot_moving = True
+
 
             # Updates the stats
             #Accumulated_speed += abs(twist.linear.x)
