@@ -205,11 +205,16 @@ class Obstacle():
                     rospy.loginfo('---8---')
 
                 # If there less then 35 cm, we turn around 
-                if Front_cone < SAFE_STOP_DISTANCE * 1.6:
+                if Front_cone < SAFE_STOP_DISTANCE * 1.6 :
                     # If turn_time counter is above 0, turtlebot will turn around in a circle
-                    if Turn_time > 0:  
-                        Turning_around_right(1)
-                        rospy.loginfo('---9---')         
+                    if Turn_time > 0:
+                        if Front_Left_cone < Front_Right_cone:
+                            Turning_around_left(1)
+                            rospy.loginfo('---9---')
+                        else:
+                            Turning_around_right(-1)
+                            rospy.loginfo('---10---')
+                               
                     else:
                         Backing(0.3 * LINEAR_VEL)
                         turtlebot_moving = True
