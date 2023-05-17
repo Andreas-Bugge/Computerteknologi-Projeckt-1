@@ -33,8 +33,6 @@ LIDAR_ERROR = 0.05
 SAFE_STOP_DISTANCE = STOP_DISTANCE + LIDAR_ERROR
 TURNING_DISTANCE = 0.4
 
-
-
 # Class for obstacle dection.
 class Obstacle():
 
@@ -209,29 +207,23 @@ class Obstacle():
                     # If turn_time counter is above 0, turtlebot will turn around in a circle
                     if Turn_time > 0:
                         if Front_Left_cone < Front_Right_cone:
-                            Turning_around_left(1)
+                            Turn_factor = 1
                             rospy.loginfo('---9---')
                         else:
-                            Turning_around_right(-1)
+                            Turn_factor = -1
                             rospy.loginfo('---10---')
-                               
-                    else:
-                        Backing(0.3 * LINEAR_VEL)
-                        turtlebot_moving = True
-                        rospy.loginfo('---10---')
 
-                    # Counter for the turn time
-                    Turn_time -= 1   
-                    rospy.loginfo('Turn-time counter: %f', Turn_time)
-                    
-                # If there is no collision, turtlebot will move forward.
+                    # Turn timer initiated
+                    Turn_time -= 1  
+                    Turning_around_right(Turn_factor)
+                          
                 else:
                     Forward(LINEAR_VEL)
-                    rospy.loginfo('---11---')
                     Turn_time = 14
                     turtlebot_moving = True
+                    rospy.loginfo('---10---')
             
-            #Updates the stats
+            # Updates the stats
             Accumulated_speed += abs(twist.linear.x)
             Speed_updates += 1
         
