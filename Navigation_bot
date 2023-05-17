@@ -196,6 +196,9 @@ class Obstacle():
                         
                 # If there is a clear way ahead, turtlebot will move forward.
                 else:
+                    if (Left_cone < 1.5 and Right_cone < 1.5):
+                        Forward(LINEAR_VEL)
+                        rospy.loginfo('---5---')
                     Forward(LINEAR_VEL)
                     rospy.loginfo('---5---')
 
@@ -234,7 +237,8 @@ class Obstacle():
                                 rospy.loginfo('---10---')
 
                     # Turn timer initiated
-                    Turn_time -= 1  
+                    Turn_time -= 1
+                    rospy.loginfo('Turn time counter: %f', Turn_time)
                     Turning_around_right(Turn_factor)
                           
                 else:
