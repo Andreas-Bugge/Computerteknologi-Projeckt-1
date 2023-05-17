@@ -162,7 +162,7 @@ class Obstacle():
                 if Front_cone < TURNING_DISTANCE:
                     # If there is more space to the right than to the left, turtlebot will turn right.
                     if Front_Left_cone < Front_Right_cone:
-                        Turn_right(0.4 * LINEAR_VEL, 1)
+                        Turn_right(LINEAR_VEL, 1) 
                         rospy.loginfo('---2---') 
                         # If there is need for at sharp turn to the right
                         if Front_cone < TURNING_DISTANCE / 1.3:
@@ -172,7 +172,7 @@ class Obstacle():
 
                         # If there more space to the left than to the right, turtlebot will turn left.
                     elif Front_Left_cone > Front_Right_cone:
-                        Turn_left(0.4 * LINEAR_VEL, 1)
+                        Turn_left(LINEAR_VEL, 1)
                         rospy.loginfo('---4---')
                         # If there is need for at sharp turn to the left
                         if Front_cone < TURNING_DISTANCE / 1.3:
@@ -196,13 +196,16 @@ class Obstacle():
             # If turtlebot is NOT moving
             else:
                 # If there is a wall to close to the turtlebot, it will back up
-                if Front_cone < SAFE_STOP_DISTANCE and (Front_Left_cone < SAFE_STOP_DISTANCE or Front_Right_cone < SAFE_STOP_DISTANCE):
+                if Front_cone < SAFE_STOP_DISTANCE and Front_Left_cone < SAFE_STOP_DISTANCE:
                     Backing(-1 * LINEAR_VEL)
                     rospy.loginfo('---7---')
+                
+                elif Front_cone < SAFE_STOP_DISTANCE and Front_Right_cone < SAFE_STOP_DISTANCE:
+                    Backing(-1 * LINEAR_VEL)
+                    rospy.loginfo('---8---')
 
                 # If there less then 35 cm, we turn around 
-                if Front_cone < SAFE_STOP_DISTANCE * 1.4:
-                    rospy.loginfo('---8---')
+                if Front_cone < SAFE_STOP_DISTANCE * 1.6:
                     # If turn_time counter is above 0, turtlebot will turn around in a circle
                     if Turn_time > 0:  
                         Turning_around_right(1)
@@ -214,13 +217,12 @@ class Obstacle():
 
                     # Counter for the turn time
                     Turn_time -= 1   
-
                     rospy.loginfo('Turn-time counter: %f', Turn_time)
                     
                 # If there is no collision, turtlebot will move forward.
                 else:
                     Forward(LINEAR_VEL)
-                    rospy.loginfo('---12---')
+                    rospy.loginfo('---11---')
                     Turn_time = 14
                     turtlebot_moving = True
             
