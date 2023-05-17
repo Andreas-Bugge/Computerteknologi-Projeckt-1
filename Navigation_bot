@@ -207,11 +207,13 @@ class Obstacle():
                     # If turn_time counter is above 0, turtlebot will turn around in a circle
                     if Turn_time > 0:
                         if Front_Left_cone < Front_Right_cone:
-                            Turn_factor = 1
-                            rospy.loginfo('---9---')
+                            if Left_cone < Right_cone:
+                                Turn_factor = 1
+                                rospy.loginfo('---9---')
                         else:
-                            Turn_factor = -1
-                            rospy.loginfo('---10---')
+                            if Left_cone > Right_cone:
+                                Turn_factor = -1
+                                rospy.loginfo('---10---')
 
                     # Turn timer initiated
                     Turn_time -= 1  
