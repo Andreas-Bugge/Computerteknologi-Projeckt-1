@@ -170,11 +170,11 @@ class Obstacle():
                                 rospy.loginfo('---3---')
 
                         Turn_right(LINEAR_VEL, 1) 
-                        rospy.loginfo('---2---') 
+                        rospy.loginfo('---4---') 
                         # If there is need for at sharp turn to the right
                         if Front_cone < TURNING_DISTANCE / 1.3:
                             Turn_right(0.2 * LINEAR_VEL, 1)
-                            rospy.loginfo('---3---')
+                            rospy.loginfo('---5---')
 
 
                         # If there more space to the left than to the right, turtlebot will turn left.
@@ -182,25 +182,22 @@ class Obstacle():
                         # Checking Left and right cones to optimize the turn
                         if Left_cone > Right_cone:
                             Turn_left(LINEAR_VEL, 1)
-                            rospy.loginfo('---4---')
+                            rospy.loginfo('---6---')
                             # If there is need for at sharp turn to the left
                             if Front_cone < TURNING_DISTANCE / 1.3:
                                 Turn_left(0.2 * LINEAR_VEL, 1)
 
                         if Left_cone > Right_cone:
                             Turn_left(LINEAR_VEL, 1)
-                            rospy.loginfo('---4---')
+                            rospy.loginfo('---7---')
                             # If there is need for at sharp turn to the left
                             if Front_cone < TURNING_DISTANCE / 1.3:
                                 Turn_left(0.2 * LINEAR_VEL, 1)
                         
                 # If there is a clear way ahead, turtlebot will move forward.
                 else:
-                    if (Left_cone < 1.5 and Right_cone < 1.5):
-                        Forward(LINEAR_VEL)
-                        rospy.loginfo('---5---')
                     Forward(LINEAR_VEL)
-                    rospy.loginfo('---5---')
+                    rospy.loginfo('---8---')
 
                     # If there is consistent faulty scans, turtlebot will back up.
                     if Front_cone > 10.0:
@@ -208,7 +205,7 @@ class Obstacle():
                         if (Turn_time > 0):
                             Backing(0.3 * LINEAR_VEL)
                             Turn_time -= 1
-                            rospy.loginfo('---6---')
+                            rospy.loginfo('---9---')
                         else:
                             turtlebot_moving = False
                    
@@ -217,11 +214,11 @@ class Obstacle():
                 # If there is a wall to close to the turtlebot, it will back up
                 if Front_cone < SAFE_STOP_DISTANCE and Front_Left_cone < SAFE_STOP_DISTANCE:
                     Backing(-1 * LINEAR_VEL)
-                    rospy.loginfo('---7---')
+                    rospy.loginfo('---10---')
                 
                 elif Front_cone < SAFE_STOP_DISTANCE and Front_Right_cone < SAFE_STOP_DISTANCE:
                     Backing(-1 * LINEAR_VEL)
-                    rospy.loginfo('---8---')
+                    rospy.loginfo('---11---')
 
                 # If there less then 35 cm, we turn around 
                 if Front_cone < SAFE_STOP_DISTANCE * 1.6 :
@@ -230,11 +227,11 @@ class Obstacle():
                         if Front_Left_cone < Front_Right_cone:
                             if Left_cone < Right_cone:
                                 Turn_factor = 1
-                                rospy.loginfo('---9---')
+                                rospy.loginfo('---12---')
                         else:
                             if Left_cone > Right_cone:
                                 Turn_factor = -1
-                                rospy.loginfo('---10---')
+                                rospy.loginfo('---13---')
 
                     # Turn timer initiated
                     Turn_time -= 1
@@ -245,7 +242,7 @@ class Obstacle():
                     Forward(LINEAR_VEL)
                     Turn_time = 14
                     turtlebot_moving = True
-                    rospy.loginfo('---10---')
+                    rospy.loginfo('---14---')
             
             # Updates the stats
             Accumulated_speed += abs(twist.linear.x)
