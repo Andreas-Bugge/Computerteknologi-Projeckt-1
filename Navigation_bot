@@ -35,6 +35,7 @@ TURNING_DISTANCE = 0.4
 COLLISION_DISTANCE = 0.2
 BACK_VAL = 0.15
 
+# Class for RGB sensor.
 class RGB():
     def __init__(self):
         self.bus = smbus2.SMBus(1)
@@ -215,7 +216,6 @@ class Obstacle():
                     Turn_factor = 1
 
                     first_scan_value = False
-                    turn_start_time = time.time()
 
                     # Deciding which direction to turn around itself
                     if not first_scan_value:
@@ -232,22 +232,11 @@ class Obstacle():
 
                     if first_scan_value:
                         turtlebot_moving = False
-
+                        rospy.loginfo('Turn time counter: %f')
                         # Turning around itself in given direction untill clear way ahead
                         while Front_cone < COLLISION_DISTANCE * 1.6:
+                            # Turning around
                             Turning_around(Turn_factor)
-
-                            # If the turtlebot is turning around itself for more than 10 seconds, it will back up.
-                            if time.time() - turn_start_time > 10:
-                                while Backing_cone < COLLISION_DISTANCE * 1.3:
-                                    Backing(-0.5 * LINEAR_VEL)
-
-                                    # Updating the scan values for the next loop
-                                    _, Backing_cone, _, _, _, _ = self.get_scan()
-                                    
-                                # Resetting the turn time counter
-                                turn_start_time = time.time()
-
                             # Updating the scan values for the next loop
                             Front_cone, _, _, _, _, _ = self.get_scan()
                             rospy.loginfo('---13---')
