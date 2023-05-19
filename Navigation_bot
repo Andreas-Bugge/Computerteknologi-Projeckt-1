@@ -244,7 +244,7 @@ class Obstacle():
 
                                     # Updating the scan values for the next loop
                                     _, Backing_cone, _, _, _, _ = self.get_scan()
-
+                                    
                                 # Resetting the turn time counter
                                 turn_start_time = time.time()
 
