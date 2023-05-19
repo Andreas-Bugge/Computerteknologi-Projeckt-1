@@ -37,6 +37,8 @@ BACK_VAL = 0.15
 
 # Class for RGB sensor.
 class RGB():
+    Cooldown = 0
+
     def __init__(self):
         self.bus = smbus2.SMBus(1)
         time.sleep(0.5)
@@ -44,15 +46,27 @@ class RGB():
         
     def Color(self):
         Red = self.bus.read_word_data(0x44, 0x0B)
-        Green = self.bus.read_word_data(0x44, 0x09)
-        Blue = self.bus.read_word_data(0x44, 0x0D)
-        return (Red, Green, Blue)
+        return (Red)
     
+    def victims(self):
+        Red = self.Color()
+        if RGB.Cooldown <= 0:
+            if Red > 180:
+                RGB.Cooldown = 10
+                return True
+            else:
+                RGB.Cooldown -= 1
+                return False
+
 # Class for obstacle dection.
 class Obstacle():
+    # Setting up the variables for the class.   
+    collision_counter = 0 
+    collision_cooldown = 0
 
     # Setting up interactions with the ROS-system.
     def __init__(self):
+        self.RGBsensor = RGB()
         self._cmd_pub = rospy.Publisher('cmd_vel', Twist, queue_size=1)
         self.obstacle()
 
@@ -84,15 +98,27 @@ class Obstacle():
         Left_cone = min(scan_filter[30:70])
         Right_cone= min(scan_filter[290:330])
 
-        return Front_cone, Backing_cone, Front_Left_cone, Front_Right_cone, Left_cone, Right_cone
+        Full_scan = min(scan_filter[0:359])
+
+        return Front_cone, Backing_cone, Front_Left_cone, Front_Right_cone, Left_cone, Right_cone, Full_scan
+    
+    # Function for measureing collisions
+    def get_collision(self):
+        _, _, _, _, _, _, Full_scan = self.get_scan()
+
+        if Full_scan > COLLISION_DISTANCE and Obstacle.collision_cooldown < 1:
+            Obstacle.collision_counter += 1
+            Obstacle.collision_cooldown = 5
+            rospy.loginfo('Collision detected! %f', Obstacle.collision_counter)
+        else:
+            Obstacle.collision_cooldown -= 1
+
 
     def obstacle(self):
-
         # Initial stats for the program
         twist = Twist()
         turtlebot_moving = True
         Victims_found = 0
-        Collision_counter = 0
 
         # Speed stats
         Accumulated_speed = 0
@@ -101,7 +127,10 @@ class Obstacle():
         # Runtime settings
         Run_time = 60 * 2
         End_run = time.time() + Run_time
-    
+
+        # Sensor data
+        Data = RGB()
+            
         # ALGORITMS FOR TURTLEBOT MOVEMENTS
         # Turtlebot is moving forward
         def Forward (speed):
@@ -140,8 +169,17 @@ class Obstacle():
 
         # Control loop for the program
         while not rospy.is_shutdown() and time.time() < End_run:
-            Front_cone, Backing_cone, Front_Left_cone, Front_Right_cone, Left_cone, Right_cone = self.get_scan()
+
+            Front_cone, Backing_cone, Front_Left_cone, Front_Right_cone, Left_cone, Right_cone, Full_scan= self.get_scan()
             
+            # Checking for victims
+            if Data.victims():
+                Victims_found += 1
+                rospy.loginfo('Total Victims Found %f', Victims_found)
+
+            # Checking for collisions 
+            self.get_collision()
+
             # If turtlebot is moving
             if turtlebot_moving:
 
@@ -202,7 +240,7 @@ class Obstacle():
                             # Turning around
                             Backing(-0.5 * LINEAR_VEL)
                             # Updating the scan values for the next loop
-                            Front_cone, _, _, _, _, _ = self.get_scan()
+                            Front_cone, _, _, _, _, _, _ = self.get_scan()
                             rospy.loginfo('---9---')
 
                         # Start moving forward again
@@ -232,13 +270,12 @@ class Obstacle():
 
                     if first_scan_value:
                         turtlebot_moving = False
-                        rospy.loginfo('Turn time counter: %f')
                         # Turning around itself in given direction untill clear way ahead
                         while Front_cone < COLLISION_DISTANCE * 1.6:
                             # Turning around
                             Turning_around(Turn_factor)
                             # Updating the scan values for the next loop
-                            Front_cone, _, _, _, _, _ = self.get_scan()
+                            Front_cone, _, _, _, _, _, _ = self.get_scan()
                             rospy.loginfo('---13---')
 
                         # Start moving forward again
@@ -253,10 +290,14 @@ class Obstacle():
                     rospy.loginfo('---15---')
             
             # Update stats
-            #Accumulated_speed += abs(twist.linear.x)
-            #Speed_updates += 1
-        
-            #rospy.on_shutdown(self.Stats)
+            Accumulated_speed += abs(twist.linear.x)
+            Speed_updates += 1
+
+        # Print stats after run
+        rospy.loginfo('Total Victims Found: %f', Victims_found)
+        rospy.loginfo('Average speed: %f', Accumulated_speed / Speed_updates)
+        rospy.loginfo('Total collisions: %f', Obstacle.collision_counter)
+        rospy.loginfo('Total run time: %f', Run_time)
 
 def main():
     rospy.init_node('turtlebot3_obstacle')
