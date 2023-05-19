@@ -193,12 +193,12 @@ class Obstacle():
                 elif Front_cone < TURNING_DISTANCE:
                     if Front_Left_cone < Front_Right_cone:
                         Turn_right(LINEAR_VEL, 1) 
-                        rospy.loginfo('---4---') 
+                        rospy.loginfo('---2---') 
 
                     # Soft left turn
                     else:
                         Turn_left(LINEAR_VEL, 1)
-                        rospy.loginfo('---7---')
+                        rospy.loginfo('---3---')
 
                     # Hard right/left turns if necessary
                     if Front_cone < TURNING_DISTANCE / 1.2:
@@ -208,12 +208,12 @@ class Obstacle():
 
                         else:
                             Turn_left(0.4 * LINEAR_VEL, 1)
-                            rospy.loginfo('---7---')
+                            rospy.loginfo('---5---')
              
                 # If there is a clear way ahead, turtlebot will move forward.
                 else:
                     Forward(LINEAR_VEL)
-                    rospy.loginfo('---8---')
+                    rospy.loginfo('---6---')
 
                     Control_time = 10
                     # If there is consistent faulty scans, turtlebot will back up.
@@ -223,7 +223,7 @@ class Obstacle():
                             Backing(-0.5 * LINEAR_VEL)
                             # Updating the scan values for the next loop
                             Front_cone, _, _, _, _, _, _ = self.get_scan()
-                            rospy.loginfo('---9---')
+                            rospy.loginfo('---7---')
 
                         # Start moving forward again
                         turtlebot_moving = True
