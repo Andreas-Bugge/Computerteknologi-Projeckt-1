@@ -156,7 +156,7 @@ class Obstacle():
                     if Front_Left_cone < Front_Right_cone:
                         while Front_Right_cone > Front_Right_cone:
                             Turn_right(0.18, 0.95)
-                            s
+                    elif
             else:
                 
                 
