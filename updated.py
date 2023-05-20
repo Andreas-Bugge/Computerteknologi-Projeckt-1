@@ -36,17 +36,20 @@ COLLISION_DISTANCE = 0.01
 
 # Class for RGB sensor.
 class RGB():
+    # Cooldown varibel
     Cooldown = 0
 
     def __init__(self):
         self.bus = smbus2.SMBus(1)
         time.sleep(0.5)
         self.bus.write_byte_data(0x44, 0x01, 0x05)
-        
+
+    # Read the color red        
     def Color(self):
         Red = self.bus.read_word_data(0x44, 0x0B)
         return (Red)
     
+    # Cooldown boolean
     def victims(self):
         Red = self.Color()
         if RGB.Cooldown <= 0:
@@ -58,11 +61,10 @@ class RGB():
                 return False
 
 # Class for obstacle dection.
-class Obstacle():
-    # Setting up the variables for the class.   
-    Collision_counter = 0
-    # Making a cooldown so it doesn't count multiple collisions in one collision. 
+class Obstacle():  
+    # Collision cooldown, so it doesn't count multiple collisions in one collision. 
     Collision_cooldown = 0
+    Collision_counter = 0
 
     # Setting up interactions with the ROS-system.
     def __init__(self):
@@ -75,6 +77,7 @@ class Obstacle():
         scan = rospy.wait_for_message('scan', LaserScan)
         scan_filter = []
         scan_filter = list(scan.ranges[0:359])
+
         # Sorts out all invalid, NaN and zeros from our scan_filter       
         for i in range(len(scan_filter)):
             if scan_filter[i] == float('Inf'):
@@ -85,11 +88,13 @@ class Obstacle():
                 scan_filter[i] = 20.0
         
         # Makes different cone arrays and gets the minimum value from each cone
+        Full_scan = min(scan_filter[0:359])
+
         Left_front_cone = scan_filter[0:15]
         Right_front_cone = scan_filter[344:359]
         Front_cone = Left_front_cone + Right_front_cone
-        Front_cone = min(Front_cone)
 
+        Front_cone = min(Front_cone)
         Backing_cone = min(scan_filter[170:190])
 
         Front_Left_cone = min(scan_filter[16:30])
@@ -97,9 +102,6 @@ class Obstacle():
 
         Left_cone = min(scan_filter[30:70])
         Right_cone= min(scan_filter[290:330])
-
-        # The collision-scanner
-        Full_scan = min(scan_filter[0:359])
 
         return Front_cone, Backing_cone, Front_Left_cone, Front_Right_cone, Left_cone, Right_cone, Full_scan
     
@@ -128,9 +130,6 @@ class Obstacle():
         # Runtime / Time settings
         Run_time = 60 * 2
         End_run = time.time() + Run_time
-        
-        Time_factor = 0 
-        Control_time = time.time() + Time_factor
 
         # Sensor data
         Data = RGB()
@@ -189,6 +188,7 @@ class Obstacle():
                     turtlebot_moving = False  
                     rospy.loginfo('---1---') 
 
+                # If it is possible to make a turn:
                 # Soft right turn
                 elif Front_cone < TURNING_DISTANCE:
                     if Front_Left_cone < Front_Right_cone:
@@ -215,10 +215,9 @@ class Obstacle():
                     Forward(LINEAR_VEL)
                     rospy.loginfo('---6---')
 
-                    Control_time = 10
                     # If there is consistent faulty scans, turtlebot will back up.
-                    if Front_cone > 10.0 and time.time() > Control_time:
-                        while Front_cone < SAFE_STOP_DISTANCE * 1.6:
+                    if Front_cone > 10.0:
+                        while Front_cone < SAFE_STOP_DISTANCE * 1.5:
                             # Turning around
                             Backing(-0.5 * LINEAR_VEL)
                             # Updating the scan values for the next loop
@@ -275,7 +274,7 @@ class Obstacle():
             self._cmd_pub.publish(twist)
 
         # Print stats after run
-        rospy.loginfo('Total Victims Found: %f', Victims_found)
+        rospy.loginfo('Total victims found: %f', Victims_found)
         rospy.loginfo('Average speed: %f', Accumulated_speed / Speed_updates)
         rospy.loginfo('Total collisions: %f', Obstacle.Collision_counter)
         rospy.loginfo('Total run time: %f', Run_time)
