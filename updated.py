@@ -32,33 +32,45 @@ STOP_DISTANCE = 0.15
 LIDAR_ERROR = 0.05
 SAFE_STOP_DISTANCE = STOP_DISTANCE + LIDAR_ERROR
 TURNING_DISTANCE = 0.35 + LIDAR_ERROR
-COLLISION_DISTANCE = 0.01
+COLLISION_DISTANCE = 0.1
 
 # Class for RGB sensor.
 class RGB():
-    # Cooldown varibel
-    Cooldown = 0
-
-    def __init__(self):
-        self.bus = smbus2.SMBus(1)
-        time.sleep(0.5)
-        self.bus.write_byte_data(0x44, 0x01, 0x05)
-
-    # Read the color red        
-    def Color(self):
-        Red = self.bus.read_word_data(0x44, 0x0B)
-        return (Red)
+    # Used for not scanning the same victim multiple times.
+    RGB_cooldown = 1
     
-    # Cooldown boolean
-    def victims(self):
-        Red = self.Color()
-        if RGB.Cooldown <= 0:
-            if Red > 180:
-                RGB.Cooldown = 10
+    def __init__(self):
+        # Get I2C bus
+        self.bus = smbus2.SMBus(1)
+
+        time.sleep(0.5)
+
+        # ISL29125 address, 0x44(68) (Standarden)
+        # Select configuation-1 register: 0x01(01)
+        # 0b00101(5) Operation: RGB, Range: 375 lux, Res: 16 Bits
+        self.bus.write_byte_data(0x44, 0x01, 0x05)
+        self.initial_values = self.Colour() 
+
+    def Colour(self):
+        # Selects the right registers
+        data = self.bus.read_i2c_block_data(0x44, 0x09, 6)
+        green = data[1] 
+        red = data[3] 
+        blue = data[5] 
+        return green, red, blue
+    
+    def getVictim(self):
+        lightdata = self.Colour()
+
+        print('RED DATA:', lightdata[1])
+        print('Initial values: ', self.initial_values[1])
+        if RGB.RGB_cooldown < 1:
+            if lightdata[1] - self.initial_values[1] >= 15:
+                RGB.RGB_cooldown = 7
                 return True
-            else:
-                RGB.Cooldown -= 1
-                return False
+        else:
+            RGB.RGB_cooldown -= 1
+            return False
 
 # Class for obstacle dection.
 class Obstacle():  
@@ -109,12 +121,12 @@ class Obstacle():
     def get_collision(self):
         _, _, _, _, _, _, Full_scan = self.get_scan()
 
-        if Full_scan > COLLISION_DISTANCE and Obstacle.Collision_cooldown < 1:
+        if Full_scan < COLLISION_DISTANCE and Obstacle.Collision_cooldown < 1:
             Obstacle.Collision_counter += 1
             Obstacle.Collision_cooldown = 5
             rospy.loginfo('Collision detected! %f', Obstacle.Collision_counter)
         else:
-            Obstacle.collision_cooldown -= 1
+            Obstacle.Collision_cooldown -= 1
 
 
     def obstacle(self):
@@ -128,41 +140,46 @@ class Obstacle():
         Speed_updates = 0
 
         # Runtime / Time settings
-        Run_time = 60 * 2
+        Run_time = 30 * 2
         End_run = time.time() + Run_time
 
         # Sensor data
         Data = RGB()
-            
+        
         # ALGORITMS FOR TURTLEBOT MOVEMENTS
         # Turtlebot is moving forward
         def Forward (speed):
             twist.linear.x = speed
             twist.angular.z = 0.0
+            self._cmd_pub.publish(twist)
             rospy.loginfo('Moving forward! %f', Front_cone)
 
         # Turning turtlebot to the right
         def Turn_right (speed, turn):   
             twist.linear.x = speed
             twist.angular.z = -turn
+            self._cmd_pub.publish(twist)
             rospy.loginfo('Turning to right! %f', Front_Right_cone)
 
         # Turning turtlebot to the left
         def Turn_left (speed, turn):
             twist.linear.x = speed
             twist.angular.z = turn
+            self._cmd_pub.publish(twist)
             rospy.loginfo('Turning to left! %f', Front_Left_cone)
 
         # Turtlebot is backing up
         def Backing (speed):   
             twist.linear.x = speed
             twist.angular.z = 0.0
+            self._cmd_pub.publish(twist)
             rospy.loginfo('Backing! %f', Backing_cone)
 
         # Turning around in case of encirclement
         def Turning_around (turn):
             twist.linear.x = 0.0
             twist.angular.z = turn
+            self._cmd_pub.publish(twist)
             rospy.loginfo('Turning around!')  
 
         # Control loop for the program
@@ -173,9 +190,9 @@ class Obstacle():
             self.get_collision()
 
             # Checking for victims
-            if Data.victims():
+            if(Data.getVictim()):
                 Victims_found += 1
-                rospy.loginfo('Total Victims Found %f', Victims_found)
+                rospy.loginfo('New victim found, total victims: %i', Victims_found) 
 
             # If turtlebot is moving
             if turtlebot_moving:
@@ -217,16 +234,21 @@ class Obstacle():
 
                     # If there is consistent faulty scans, turtlebot will back up.
                     if Front_cone > 10.0:
-                        while Front_cone < SAFE_STOP_DISTANCE * 1.5:
-                            # Turning around
-                            Backing(-0.5 * LINEAR_VEL)
-                            # Updating the scan values for the next loop
-                            Front_cone, _, _, _, _, _, _ = self.get_scan()
-                            rospy.loginfo('---7---')
+                        counter_timer = 10 #check if needed
+                        if counter_timer < 1: # check if needed
+                            counter_timer = 10 # check if needed
+                            while Front_cone < SAFE_STOP_DISTANCE * 1.5:
+                                # Turning around
+                                Backing(-0.5 * LINEAR_VEL)
+                                # Updating the scan values for the next loop
+                                Front_cone, _, _, _, _, _, _ = self.get_scan()
+                                rospy.loginfo('---7---')
+                        else:
+                            counter_timer -= 1 # check if needed
 
-                        # Start moving forward again
-                        turtlebot_moving = True
-                        rospy.loginfo('---10---')
+                            # Start moving forward again
+                            turtlebot_moving = True
+                            rospy.loginfo('---10---')
                    
             # If turtlebot is NOT moving
             else: 
@@ -251,6 +273,7 @@ class Obstacle():
 
                     # Turning untill clear way ahead
                     if first_scan_value:
+                        
                         while Front_cone < SAFE_STOP_DISTANCE * 1.5:
                             Turning_around(Turn_factor)
                             Front_cone, _, _, _, _, _, _ = self.get_scan()
@@ -268,10 +291,7 @@ class Obstacle():
 
             # Update stats
             Accumulated_speed += abs(twist.linear.x)
-            Speed_updates += 1
-
-            # Publish the actuation
-            self._cmd_pub.publish(twist)
+            Speed_updates += 1            
 
         # Print stats after run
         rospy.loginfo('Total victims found: %f', Victims_found)
