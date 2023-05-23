@@ -100,20 +100,14 @@ class Obstacle():
                 scan_filter[i] = 20.0
         
         # Makes different cone arrays and gets the minimum value from each cone
-        Full_scan = min(scan_filter[0:359])
+        Full_scan = min(scan_filter)
 
-        Left_front_cone = scan_filter[0:15]
-        Right_front_cone = scan_filter[344:359]
-        Front_cone = Left_front_cone + Right_front_cone
-
-        Front_cone = min(Front_cone)
+        Front_cone = min(scan_filter[0:15] + scan_filter[344:359])
         Backing_cone = min(scan_filter[170:190])
-
         Front_Left_cone = min(scan_filter[16:30])
         Front_Right_cone = min(scan_filter[329:344])
-
         Left_cone = min(scan_filter[30:70])
-        Right_cone= min(scan_filter[290:330])
+        Right_cone = min(scan_filter[290:330])
 
         return Front_cone, Backing_cone, Front_Left_cone, Front_Right_cone, Left_cone, Right_cone, Full_scan
     
