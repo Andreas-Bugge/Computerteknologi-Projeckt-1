@@ -173,5 +173,16 @@ if __name__ == '__main__':
 
 
 
+                        if Front_cone < TURNING_DISTANCE / 1.3:
+                        if Front_Left_cone < Front_Right_cone:
+                            Turn_right(0.25 * LINEAR_VEL, 1) 
+                            rospy.loginfo('---4---') 
+ 
+                        else:
+                            Turn_left(0.25 * LINEAR_VEL, 1)
+                            rospy.loginfo('---5---')
+
+
+
 
     
