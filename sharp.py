@@ -238,27 +238,16 @@ class Obstacle():
                     rospy.loginfo('---6---')
                     
                     if Left_cone < SAFE_STOP_DISTANCE:
-                        angular_vel = LINEAR_VEL * (TURNING_DISTANCE - Front_cone) / TURNING_DISTANCE
-                        Turn_right(LINEAR_VEL, 1)
+                        Turn_right(LINEAR_VEL, 0.2)
                         rospy.loginfo('---8---')
 
                     elif Right_cone < SAFE_STOP_DISTANCE:
-                        angular_vel = LINEAR_VEL * (TURNING_DISTANCE - Front_cone) / TURNING_DISTANCE
-                        Turn_left(LINEAR_VEL, 1)
+                        Turn_left(LINEAR_VEL, 0.2)
                         rospy.loginfo('---9---')
                     
                    
             # If turtlebot is NOT moving
             else: 
-                if Front_cone < SAFE_STOP_DISTANCE and Left_cone < SAFE_STOP_DISTANCE and Right_cone < SAFE_STOP_DISTANCE:
-                # Move backward until there is a clear path
-                    while Front_cone < SAFE_STOP_DISTANCE / 1.1:
-                        Backing(LINEAR_VEL)
-                        Front_cone, _, _, _, _, _, _ = self.get_scan()
-                        rospy.loginfo('---8---')
-                    
-                    turtlebot_moving = True
-
 
                 # Deciding to turn around itself 
                 if Front_cone < SAFE_STOP_DISTANCE:
