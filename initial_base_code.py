@@ -111,7 +111,7 @@ class Obstacle():
     
     # Function for measuring collisions
     def get_collision(self):
-        _, _, _, _, _, _, Full_scan = self.get_scan()
+        _, _, _, _, Full_scan = self.get_scan()
 
         if Full_scan < COLLISION_DISTANCE and Obstacle.Collision_cooldown < 1:
             Obstacle.Collision_counter += 1

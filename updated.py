@@ -212,13 +212,13 @@ class Obstacle():
                         rospy.loginfo('---3---')
 
                     # Hard right/left turns if necessary
-                    if Front_cone < TURNING_DISTANCE / 1.2:
+                    if Front_cone < TURNING_DISTANCE / 1.3:
                         if Front_Left_cone < Front_Right_cone:
-                            Turn_right(0.4 * LINEAR_VEL, 1) 
+                            Turn_right(0.5 * LINEAR_VEL, 1.5) 
                             rospy.loginfo('---4---') 
 
                         else:
-                            Turn_left(0.4 * LINEAR_VEL, 1)
+                            Turn_left(0.5 * LINEAR_VEL, 1.5)
                             rospy.loginfo('---5---')
              
                 # If there is a clear way ahead, turtlebot will move forward.
