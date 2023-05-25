@@ -194,7 +194,7 @@ class Obstacle():
                 # Close to collision 
                 if Front_cone < SAFE_STOP_DISTANCE:
                     # Backing up turtlebot for one second
-                    Backing(-1 * LINEAR_VEL)
+                    Backing(LINEAR_VEL)
                     # Stop the turtlebot
                     turtlebot_moving = False  
                     rospy.loginfo('---1---') 
@@ -214,11 +214,11 @@ class Obstacle():
                     # Hard right/left turns if necessary
                     if Front_cone < TURNING_DISTANCE / 1.3:
                         if Front_Left_cone < Front_Right_cone:
-                            Turn_right(0.5 * LINEAR_VEL, 1.5) 
+                            Turn_right(0.5 * LINEAR_VEL, 1) 
                             rospy.loginfo('---4---') 
 
                         else:
-                            Turn_left(0.5 * LINEAR_VEL, 1.5)
+                            Turn_left(0.5 * LINEAR_VEL, 1)
                             rospy.loginfo('---5---')
              
                 # If there is a clear way ahead, turtlebot will move forward.
