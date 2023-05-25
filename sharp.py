@@ -62,8 +62,6 @@ class RGB():
     def getVictim(self):
         lightdata = self.Colour()
 
-        print('RED DATA:', lightdata[1])
-        print('Initial values: ', self.initial_values[1])
         if RGB.RGB_cooldown < 1:
             if lightdata[1] - self.initial_values[1] >= 15:
                 RGB.RGB_cooldown = 7
@@ -135,7 +133,7 @@ class Obstacle():
         Speed_updates = 0
 
         # Runtime / Time settings
-        Run_time = 30 * 2
+        Run_time = 45 * 2
         End_run = time.time() + Run_time
 
         # Sensor data
@@ -195,7 +193,7 @@ class Obstacle():
                 # Close to collision 
                 if Front_cone < SAFE_STOP_DISTANCE:
                     # Backing up turtlebot for one second
-                    Backing(-1 * LINEAR_VEL)
+                    Backing(LINEAR_VEL)
                     # Stop the turtlebot
                     turtlebot_moving = False  
                     rospy.loginfo('---1---') 
@@ -213,36 +211,26 @@ class Obstacle():
                         rospy.loginfo('---3---')
 
                     # Hard right/left turns if necessary
-                    if Front_cone < TURNING_DISTANCE / 1.15:
-                        if Front_Left_cone < Front_Right_cone:
-                            Turn_right(0.5 * LINEAR_VEL, 1) 
-                            rospy.loginfo('---4---') 
- 
-                        else:
-                            Turn_left(0.5 * LINEAR_VEL, 1)
-                            rospy.loginfo('---5---')
-                    
                     if Front_cone < TURNING_DISTANCE / 1.3:
                         if Front_Left_cone < Front_Right_cone:
-                            Turn_right(0.25 * LINEAR_VEL, 1) 
+                            Turn_right(0.4 * LINEAR_VEL, 1) 
                             rospy.loginfo('---4---') 
  
                         else:
-                            Turn_left(0.25 * LINEAR_VEL, 1)
+                            Turn_left(0.4 * LINEAR_VEL, 1)
                             rospy.loginfo('---5---')
-
              
                 # If there is a clear way ahead, turtlebot will move forward.
                 else:
                     Forward(LINEAR_VEL)
                     rospy.loginfo('---6---')
                     
-                    if Left_cone < SAFE_STOP_DISTANCE:
-                        Turn_right(LINEAR_VEL, 0.2)
+                    if Front_Left_cone < SAFE_STOP_DISTANCE:
+                        Turn_right(LINEAR_VEL, 1)
                         rospy.loginfo('---8---')
 
-                    elif Right_cone < SAFE_STOP_DISTANCE:
-                        Turn_left(LINEAR_VEL, 0.2)
+                    elif Front_Right_cone < SAFE_STOP_DISTANCE:
+                        Turn_left(LINEAR_VEL, 1)
                         rospy.loginfo('---9---')
                     
                    
