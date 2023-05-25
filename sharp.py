@@ -250,7 +250,7 @@ class Obstacle():
             else: 
 
                 # Deciding to turn around itself 
-                if Front_cone < SAFE_STOP_DISTANCE:
+                if Front_cone < SAFE_STOP_DISTANCE * 1.25:
                     Turn_factor = 0
                     first_scan_value = False
 
