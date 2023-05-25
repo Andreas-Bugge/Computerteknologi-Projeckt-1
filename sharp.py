@@ -252,8 +252,8 @@ class Obstacle():
             else: 
                 if Front_cone < SAFE_STOP_DISTANCE and Left_cone < SAFE_STOP_DISTANCE and Right_cone < SAFE_STOP_DISTANCE:
                 # Move backward until there is a clear path
-                    while Front_cone < SAFE_STOP_DISTANCE:
-                        Backing(-LINEAR_VEL)
+                    while Front_cone < SAFE_STOP_DISTANCE / 1.1:
+                        Backing(LINEAR_VEL)
                         Front_cone, _, _, _, _, _, _ = self.get_scan()
                         rospy.loginfo('---8---')
                     
