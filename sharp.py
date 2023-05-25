@@ -128,6 +128,7 @@ class Obstacle():
         twist = Twist()
         turtlebot_moving = True
         Victims_found = 0
+        angular_vel = 0.0
 
         # Speed stats
         Accumulated_speed = 0
@@ -237,10 +238,12 @@ class Obstacle():
                     rospy.loginfo('---6---')
                     
                     if Left_cone < SAFE_STOP_DISTANCE:
+                        angular_vel = LINEAR_VEL * (TURNING_DISTANCE - Front_cone) / TURNING_DISTANCE
                         Turn_right(LINEAR_VEL, 1)
                         rospy.loginfo('---8---')
 
                     elif Right_cone < SAFE_STOP_DISTANCE:
+                        angular_vel = LINEAR_VEL * (TURNING_DISTANCE - Front_cone) / TURNING_DISTANCE
                         Turn_left(LINEAR_VEL, 1)
                         rospy.loginfo('---9---')
                     
