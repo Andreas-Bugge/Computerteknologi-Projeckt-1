@@ -225,24 +225,6 @@ class Obstacle():
                 else:
                     Forward(LINEAR_VEL)
                     rospy.loginfo('---6---')
-
-                    # If there is consistent faulty scans / blind spots for 10 iterations, turtlebot will back up.
-                    if Front_cone > 10.0:
-                        counter_timer = 10 #check if needed
-                        if counter_timer == 0: # check if needed
-                            while Front_cone < SAFE_STOP_DISTANCE * 1.5:
-                                # Turning around
-                                Backing(-0.5 * LINEAR_VEL)
-                                # Updating the scan values for the next loop
-                                Front_cone, _, _, _, _, _, _ = self.get_scan()
-                                rospy.loginfo('---7---')
-                            # Reset the counter    
-                            counter_timer = 10 # check if needed
-                            # Start moving forward again
-                            turtlebot_moving = True
-                            rospy.loginfo('---10---')
-                        else:
-                            counter_timer -= 1 # check if needed
                    
             # If turtlebot is NOT moving
             else: 
