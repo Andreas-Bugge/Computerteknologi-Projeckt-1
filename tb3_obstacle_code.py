@@ -65,7 +65,7 @@ class RGB():
         print('RED DATA:', lightdata[1])
         print('Initial values: ', self.initial_values[1])
         if RGB.RGB_cooldown < 1:
-            if lightdata[1] - self.initial_values[1] >= 15:
+            if lightdata[1] - self.initial_values[1] >= 12:
                 RGB.RGB_cooldown = 7
                 return True
         else:
@@ -134,7 +134,7 @@ class Obstacle():
         Speed_updates = 0
 
         # Runtime / Time settings
-        Run_time = 30 * 2
+        Run_time = 60 * 2
         End_run = time.time() + Run_time
 
         # Sensor data
